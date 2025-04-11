@@ -1,0 +1,13 @@
+/* src/index.css */
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent scrollbars on the body */
+}
+
+#root {
+  height: 100vh; /* Make sure the root element fills the viewport */
+  display: flex;
+  flex-direction: column; /* Needed for some layout scenarios */
+}
