@@ -144,32 +144,34 @@ function VehicleManagerDashboard() {
     const generateRequestId = () => Date.now();
 
     // --- UPDATED useEffect: Load requests and filter ONLY Pending and Held ---
-    useEffect(() => {
-        let storedRequests = JSON.parse(localStorage.getItem('requests') || '[]');
-
-        // Dummy data logic (keep as is for now)
-        if (storedRequests.length === 0) {
-             const dummyData = [
-                { id: generateRequestId(), date: dayjs().toISOString(), pickupTime: "09:00", purpose: 'Client Meeting', destination: 'Downtown Office', status: 'Pending', name:"John Doe", employeeId:"12345", pickupLocation: 'Office Parking', returnTime: '17:00', passengers: 2, notes:"Need a comfortable vehicle."},
-                { id: generateRequestId(), date: dayjs().subtract(1,'hour').toISOString(), pickupTime: "14:00", purpose: 'Site Visit', destination: 'Factory A', status: 'Pending',name:"Jane Smith", employeeId:"22222", pickupLocation: 'Main Entrance',returnTime: "15:00", passengers:5, notes:"SomeThing" },
-                { id: generateRequestId(), date: dayjs().subtract(1, 'day').toISOString(), pickupTime: "10:00", purpose: 'Inventory Check', destination: 'Warehouse B', status: 'Hold', name:"Alice Green", employeeId:"67890", pickupLocation: 'Loading Bay', returnTime: '11:00', passengers: 1, notes:"Quick check needed"},
-                // Dummy approved request removed, as it belongs in PastRequestsPage
-            ];
-            localStorage.setItem('requests', JSON.stringify(dummyData));
-            storedRequests = dummyData;
-        }
-
-        // Filter only into Pending and Held
-        const pending = storedRequests.filter(req => req.status === 'Pending');
-        const held = storedRequests.filter(req => req.status === 'Hold');
-        // Removed filtering for past requests
-
-        setRequests(pending);
-        setHeldRequests(held);
-        // setPastRequests(past); // *** REMOVED setting pastRequests state ***
-
-    }, []);
-
+// --- UPDATED useEffect: Load requests and filter ONLY Pending and Held ---
+useEffect(() => {
+  console.log("useEffect running");
+  
+  // Define our dummy data first
+  const dummyData = [
+      { id: generateRequestId(), date: dayjs().toISOString(), pickupTime: "09:00", purpose: 'Client Meeting', destination: 'Downtown Office', status: 'Pending', name: "John Doe", employeeId: "12345", pickupLocation: 'Office Parking', returnTime: '17:00', passengers: 2, notes: "Need a comfortable vehicle." },
+      { id: generateRequestId(), date: dayjs().subtract(1, 'hour').toISOString(), pickupTime: "14:00", purpose: 'Site Visit', destination: 'Factory A', status: 'Pending', name: "Jane Smith", employeeId: "22222", pickupLocation: 'Main Entrance', returnTime: "15:00", passengers: 5, notes: "SomeThing" },
+      { id: generateRequestId(), date: dayjs().subtract(1, 'day').toISOString(), pickupTime: "10:00", purpose: 'Inventory Check', destination: 'Warehouse B', status: 'Hold', name: "Alice Green", employeeId: "67890", pickupLocation: 'Loading Bay', returnTime: '11:00', passengers: 1, notes: "Quick check needed" },
+  ];
+  
+  // For testing - FORCE the dummy data to be used
+  localStorage.setItem('requests', JSON.stringify(dummyData));
+  console.log("Dummy data set in localStorage:", dummyData);
+  
+  // Filter into Pending and Held
+  const pending = dummyData.filter(req => req.status === 'Pending');
+  const held = dummyData.filter(req => req.status === 'Hold');
+  
+  console.log("Pending requests:", pending);
+  console.log("Held requests:", held);
+  
+  // Set the state directly with our dummy data
+  setRequests(pending);
+  setHeldRequests(held);
+  
+  console.log("States should be updated now");
+}, []);
     // --- UPDATED Handlers to remove pastRequests logic ---
     const handleApprove = (requestId) => {
         const requestToApprove = requests.find(req => req.id === requestId) || heldRequests.find(req => req.id === requestId);

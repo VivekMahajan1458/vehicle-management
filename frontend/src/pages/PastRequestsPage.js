@@ -2,16 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Chip, Paper, Button, Dialog, DialogTitle,
-    DialogContent, DialogContentText, DialogActions, Table, TableBody,
-    TableCell, TableContainer, TableHead, TableRow, IconButton, Stack
+    DialogContent, DialogContentText, DialogActions, Table, TableBody, TableCell,
+    TableContainer, TableHead, TableRow, IconButton, Stack, TextField,
+    Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
-import { styled, useTheme } from '@mui/system'; // Import useTheme
-import { motion } from 'framer-motion';
+import { styled, useTheme } from '@mui/system';
+import { motion } from 'framer-motion'; // For animations
 import MenuIcon from '@mui/icons-material/Menu'; // Import MenuIcon for Hamburger
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import dayjs from 'dayjs';
 import 'dayjs/locale/en';
 import VMSidebar from '../components/VMSidebar'; // Import VMSidebar
+
 
 dayjs.locale('en');
 
@@ -55,7 +57,7 @@ const ContentContainer = styled(Box, {
 const HamburgerButton = styled(IconButton)(({ theme }) => ({
     position: 'fixed', // Keep fixed position
     left: '20px', // Increase left margin
-    top: '20px', // Increase top margin slightly
+    top: '20px',
     zIndex: theme.zIndex.drawer + 1,
     display: { xs: 'block', sm: 'none' }, // Show only on small screens
     backgroundColor: 'rgba(255, 255, 255, 0.9)', // Make more visible
@@ -82,134 +84,155 @@ function formatDate(dateString) {
     return dayjs(dateString).format('MMM DD, YYYY'); // Use YYYY for 4-digit year
 }
 
-
 function PastRequestsPage() {
     const theme = useTheme(); // Needed for styled components accessing theme
     const navigate = useNavigate(); // Needed for logout
 
     const [pastRequests, setPastRequests] = useState([]);
-    const [openDialog, setOpenDialog] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
-    const [selectedRequestId, setSelectedRequestId] = useState(null);
+    const [openAssignmentDialog, setOpenAssignmentDialog] = useState(false);
+    const [selectedRequestId, setSelectedRequestId] = useState(null); // Highlighted row
     const [sidebarOpen, setSidebarOpen] = useState(true); // State for sidebar visibility
+    const [selectedDriver, setSelectedDriver] = useState('');
+    const [selectedVehicle, setSelectedVehicle] = useState('');
+    const [past, setPast] = useState([]);
 
-    // --- Added handleLogoutClick ---
+    const [drivers, setDrivers] = useState([
+        { id: 'driver-1', name: 'Mukesh', phone: '8307618187' },
+        { id: 'driver-2', name: 'Khema Ram', phone: '9799889868' },
+        { id: 'driver-3', name: 'Monu', phone: '9636320520' },
+        { id: 'driver-4', name: 'Dharmendra', phone: '9571846773' },
+        { id: 'driver-5', name: 'Gopal', phone: '7014229176' },
+        { id: 'driver-6', name: 'Jyoti Bhushan', phone: '9136557387' },
+        { id: 'driver-7', name: 'Amit', phone: '8303654036' },
+        { id: 'driver-8', name: 'Irfan Pathan', phone: '7850887676' },
+    ]);
+    const [vehicles, setVehicles] = useState([
+        { id: 'vehicle-GJ01JT6723', number: 'GJ01JT6723', type: 'Bolero Camper' },
+        { id: 'vehicle-GJ08CS5325', number: 'GJ08CS5325', type: 'Bolero Camper' },
+        { id: 'vehicle-RJ13UB1492', number: 'RJ13UB1492', type: 'Bolero' },
+        { id: 'vehicle-RJ01TA4584', number: 'RJ01TA4584', type: 'Bolero' },
+        { id: 'vehicle-GJ01WG3715', number: 'GJ01WG3715', type: 'Bolero' },
+        { id: 'vehicle-GJ01WD9880', number: 'GJ01WD9880', type: 'INNOVA' },
+        { id: 'vehicle-GJ01WD9754', number: 'GJ01WD9754', type: 'INNOVA' },
+    ]);
+
     const handleLogoutClick = () => {
         localStorage.clear();
         navigate('/login');
     };
 
+    const [openDialog, setOpenDialog] = useState(false);
+
     useEffect(() => {
-        // --- Dummy Data for Testing ---
-        const dummyRequests = [
-            {
-                id: 1,
-                date: '2025-04-01T08:00:00Z',
-                name: 'John Doe',
-                employeeId: 'JD123',
-                purpose: 'Client Meeting',
-                destination: 'Ahmedabad',
-                pickupLocation: 'Office',
-                pickupTime: '09:00 AM',
-                returnTime: '05:00 PM',
-                passengers: 2,
-                notes: 'Need a sedan.',
-                status: 'Approved',
-                assignedDriver: { name: 'Rajesh Kumar' },
-                assignedVehicle: { number: 'GJ-01-AB-1234' },
-            },
-            {
-                id: 2,
-                date: '2025-04-03T10:00:00Z',
-                name: 'Jane Smith',
-                employeeId: 'JS456',
-                purpose: 'Site Visit',
-                destination: 'Gandhinagar',
-                pickupLocation: 'Warehouse',
-                pickupTime: '10:30 AM',
-                returnTime: '04:00 PM',
-                passengers: 3,
-                notes: 'Need an SUV.',
-                status: 'Cancelled',
-                assignedDriver: null,
-                assignedVehicle: null,
-            },
-            {
-                id: 3,
-                date: '2025-03-25T14:00:00Z',
-                name: 'Peter Jones',
-                employeeId: 'PJ789',
-                purpose: 'Airport Drop-off',
-                destination: 'Airport',
-                pickupLocation: 'Guest House',
-                pickupTime: '02:30 PM',
-                returnTime: null,
-                passengers: 1,
-                notes: 'Urgent.',
-                status: 'Expired',
-                assignedDriver: { name: 'Sunil Patel' },
-                assignedVehicle: { number: 'GJ-06-CD-5678' },
-            },
-            {
-                id: 4,
-                date: '2025-04-08T09:30:00Z',
-                name: 'Alice Brown',
-                employeeId: 'AB012',
-                purpose: 'Training Session',
-                destination: 'Training Center',
-                pickupLocation: 'Office Lobby',
-                pickupTime: '09:45 AM',
-                returnTime: '01:00 PM',
-                passengers: 4,
-                notes: 'Need a spacious vehicle.',
-                status: 'Approved',
-                assignedDriver: { name: 'Priya Sharma' },
-                assignedVehicle: { number: 'GJ-16-EF-9012' },
-            },
-            {
-                id: 5,
-                date: '2025-03-15T11:00:00Z',
-                name: 'David Wilson',
-                employeeId: 'DW345',
-                purpose: 'Meeting with Vendor',
-                destination: 'Vadodara Central',
-                pickupLocation: 'Factory Gate',
-                pickupTime: '11:15 AM',
-                returnTime: '03:30 PM',
-                passengers: 2,
-                notes: 'Need a reliable car.',
-                status: 'Cancelled',
-                assignedDriver: null,
-                assignedVehicle: null,
-            },
+        const pastDummyData = [
+            { id: 'request-1', date: '2024-07-20T08:00:00.000Z', name: 'Alice Green', employeeId: '12345', purpose: 'Client Meeting', destination: 'Client Office', pickupLocation: 'Office', pickupTime: '09:00', returnTime: '17:00', passengers: 2, notes: 'Need a comfortable vehicle.', status: 'Approved', assignedDriver: { id: 'driver-1', name: 'Mukesh', phone: '8307618187' }, assignedVehicle: { id: 'vehicle-GJ01JT6723', number: 'GJ01JT6723', type: 'Bolero Camper' } },
+            { id: 'request-2', date: '2024-07-15T10:00:00.000Z', name: 'Bob White', employeeId: '67890', purpose: 'Site Visit', destination: 'Construction Site', pickupLocation: 'Office', pickupTime: '11:00', returnTime: '15:00', passengers: 3, notes: 'Need a vehicle suitable for rough terrain.', status: 'Approved', assignedDriver: { id: 'driver-2', name: 'Khema Ram', phone: '9799889868' }, assignedVehicle: { id: 'vehicle-GJ08CS5325', number: 'GJ08CS5325', type: 'Bolero Camper' } },
+            { id: 'request-3', date: '2024-07-10T14:00:00.000Z', name: 'Charlie Black', employeeId: '11223', purpose: 'Airport Pickup', destination: 'Airport', pickupLocation: 'Office', pickupTime: '15:00', returnTime: '18:00', passengers: 1, notes: 'Picking up a VIP client.', status: 'Approved', assignedDriver: { id: 'driver-3', name: 'Monu', phone: '9636320520' }, assignedVehicle: { id: 'vehicle-RJ13UB1492', number: 'RJ13UB1492', type: 'Bolero' } },
+            { id: 'request-4', date: '2024-07-05T09:00:00.000Z', name: 'Diana Yellow', employeeId: '44556', purpose: 'Training', destination: 'Training Center', pickupLocation: 'Office', pickupTime: '10:00', returnTime: '16:00', passengers: 4, notes: 'Need a spacious vehicle.', status: 'Cancelled', assignedDriver: null, assignedVehicle: null },
+            { id: 'request-5', date: '2024-06-30T11:00:00.000Z', name: 'Evan Blue', employeeId: '77889', purpose: 'Vendor Visit', destination: 'Vendor Office', pickupLocation: 'Office', pickupTime: '12:00', returnTime: '14:00', passengers: 2, notes: 'Need a reliable vehicle.', status: 'Expired', assignedDriver: null, assignedVehicle: null },
         ];
-
-        // Filter for past statuses and sort
-        const past = dummyRequests
+        
+        // Get existing requests from localStorage
+        let allRequests = JSON.parse(localStorage.getItem('requests') || '[]');
+        
+        // Check if there are any approved/cancelled/expired requests
+        const existingPastRequests = allRequests.filter(req => 
+            ['Approved', 'Cancelled', 'Expired'].includes(req.status)
+        );
+        
+        // If no past requests exist, merge the past dummy data with existing requests
+        if (existingPastRequests.length === 0) {
+            // Combine current requests with past dummy data
+            const combinedRequests = [...allRequests, ...pastDummyData];
+            
+            // Save the combined data back to localStorage
+            localStorage.setItem('requests', JSON.stringify(combinedRequests));
+            
+            // Update allRequests reference to include the combined data
+            allRequests = combinedRequests;
+        }
+        
+        // Process requests as before - auto-approve if needed
+        const updatedRequests = allRequests.map(request => {
+            if (request.status === 'Cancelled' || request.status === 'Expired') {
+                return { ...request, status: 'Approved' };
+            }
+            return request;
+        });
+        
+        // Filter for past requests and sort by date
+        const pastRequestsToDisplay = updatedRequests
             .filter(req => ['Approved', 'Cancelled', 'Expired'].includes(req.status))
-            .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date descending
-
-        setPastRequests(past);
-
-        // Remove the localStorage logic for dummy data
-        // const storedRequests = JSON.parse(localStorage.getItem('requests') || '[]');
-        // const past = storedRequests
-        //     .filter(req => ['Approved', 'Cancelled', 'Expired'].includes(req.status)) // Filter for past statuses
-        //     .sort((a, b) => b.id - a.id); // Sort newest first
-
-        // setPastRequests(past);
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // Update localStorage with processed requests
+        localStorage.setItem('requests', JSON.stringify(updatedRequests));
+        
+        // Set state for UI
+        setPastRequests(pastRequestsToDisplay);
     }, []);
 
     const handleViewDetails = (request) => {
-        console.log("Viewing details for request:", request); // ADD THIS LOG
         setSelectedRequest(request);
         setOpenDialog(true);
-    };;
+    };
 
-    const handleCloseDialog = () => {
+    const handleEditAssignment = (request) => {
+        setSelectedRequest(request);
+        setSelectedDriver(request.assignedDriver ? request.assignedDriver.id : '');
+        setSelectedVehicle(request.assignedVehicle ? request.assignedVehicle.id : '');
+        setOpenAssignmentDialog(true);
+    }
+
+    const handleAssignmentChange = (event) => {
+        const { name, value } = event.target;
+        if (name === 'driver') {
+            setSelectedDriver(value);
+        } else if (name === 'vehicle') {
+            setSelectedVehicle(value);
+        }
+    };
+
+    const handleAssignmentSubmit = () => {
+        if (selectedRequest && selectedDriver && selectedVehicle) {
+            const updatedRequests = pastRequests.map(req => {
+                if (req.id === selectedRequest.id) {
+                    const driver = drivers.find(d => d.id === selectedDriver);
+                    const vehicle = vehicles.find(v => v.id === selectedVehicle);
+                    return {
+                        ...req,
+                        assignedDriver: {
+                            id: driver.id,
+                            name: driver.name,
+                            phone: driver.phone,
+                        },
+                        assignedVehicle: {
+                            id: vehicle.id,
+                            number: vehicle.number,
+                            type: vehicle.type,
+                        },
+                    };
+                }
+                return req;
+            });
+
+            // Filter to keep only 'Approved' requests before updating localStorage and state
+            const filteredRequests = updatedRequests.filter(req => ['Approved', 'Cancelled', 'Expired'].includes(req.status));
+            localStorage.setItem('requests', JSON.stringify(updatedRequests));
+            setPastRequests(filteredRequests);
+            setOpenAssignmentDialog(false);
+            setSelectedRequest(null);
+        setSelectedDriver('');
+        setSelectedVehicle('');
+        }
+    };
+
+    const handleCloseAssignmentDialog = () => {
         setOpenDialog(false);
         setSelectedRequest(null);
     };
+
 
     const handleRowClick = (requestId) => {
         setSelectedRequestId(requestId);
@@ -254,53 +277,63 @@ function PastRequestsPage() {
                                             <TableCell>Date</TableCell>
                                             <TableCell>Requester</TableCell>
                                             <TableCell>Purpose</TableCell>
-                                            <TableCell>Destination</TableCell>
                                             <TableCell>Driver</TableCell>
                                             <TableCell>Vehicle</TableCell>
                                             <TableCell>Status</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
-                                    <TableBody>
-                                        {pastRequests.map((request) => (
-                                            <TableRow
-                                                key={request.id}
-                                                onClick={() => handleRowClick(request.id)}
-                                                sx={{
-                                                    '&:last-child td, &:last-child th': { border: 0 },
-                                                    cursor: 'pointer',
-                                                    backgroundColor: selectedRequestId === request.id ? '#f5f5f5' : 'inherit',
-                                                }}
-                                            >
-                                                <TableCell>{request.id}</TableCell>
-                                                <TableCell>{formatDate(request.date)}</TableCell>
-                                                <TableCell>{request.name || 'N/A'}</TableCell>
-                                                <TableCell>{request.purpose}</TableCell>
-                                                <TableCell>{request.destination}</TableCell>
-                                                <TableCell>{request.assignedDriver ? request.assignedDriver.name : 'N/A'}</TableCell>
-                                                <TableCell>{request.assignedVehicle ? request.assignedVehicle.number : 'N/A'}</TableCell>
-                                                <TableCell>
-                                                    <StyledChip
-                                                        label={request.status === 'Cancelled' || request.status === 'Expired' ? "Not Approved" : request.status}
-                                                        status={request.status}
-                                                    />
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                                        <Button
-                                                            size="small"
-                                                            variant="outlined"
-                                                            color="primary"
-                                                            onClick={(e) => { e.stopPropagation(); handleViewDetails(request); }}
-                                                        >
-                                                            View Details
-                                                        </Button>
-                                                        {/* Add "Edit Assignment" button here later */}
-                                                    </Stack>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
+<TableBody>
+    {pastRequests.map((request) => (
+        <TableRow
+            key={request.id}
+            onClick={() => handleRowClick(request.id)}
+            sx={{
+                '&:last-child td, &:last-child th': { border: 0 },
+                cursor: 'pointer',
+                backgroundColor: selectedRequestId === request.id ? '#f5f5f5' : 'inherit',
+            }}
+        >
+            <TableCell>{request.id}</TableCell>
+            <TableCell>{formatDate(request.date)}</TableCell>
+            <TableCell>{request.name || 'N/A'}</TableCell>
+            <TableCell>{request.purpose}</TableCell>
+            <TableCell>{request.assignedDriver ? request.assignedDriver.name : 'N/A'}</TableCell>
+            <TableCell>{request.assignedVehicle ? request.assignedVehicle.number : 'N/A'}</TableCell>
+            <TableCell>
+                <StyledChip
+                    label={request.status === 'Cancelled' || request.status === 'Expired' ? "Not Approved" : request.status}
+                    status={request.status}
+                />
+            </TableCell>
+            <TableCell align="right">
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        color="primary"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(request);
+                        }}
+                    >
+                        View Details
+                    </Button>
+                    {request.status === 'Approved' && (
+                        <Button
+                            size="small"
+                            variant="contained"
+                            color="secondary"
+                            onClick={(e) => { e.stopPropagation(); handleEditAssignment(request); }}
+                        >
+                            Edit Assignment
+                        </Button>
+                    )}
+                </Stack>
+            </TableCell>
+        </TableRow>
+    ))}
+</TableBody>
                                 </Table>
                             </TableContainer>
                         ) : (
@@ -309,89 +342,128 @@ function PastRequestsPage() {
                     </StyledPaper>
                 </motion.div>
 
-                {/* View Details Dialog */}
-                <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">
-                    {selectedRequest && ( // Render content only if selectedRequest is not null
-                        <>
-                            <DialogTitle>Request Details (ID: {selectedRequest.id})</DialogTitle>
-                            <DialogContent>
-                                <DialogContentText>
-                                    Here are the details of the vehicle request:
-                                </DialogContentText>
-                                <TableContainer component={Paper} elevation={0} sx={{ mt: 2 }}> {/* Added margin-top */}
-                                    <Table size="small"> {/* Use small size for potentially better fit */}
-                                        <TableBody>
-                                            {/* Ensure all these fields exist on your request objects */}
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none', width: '30%' }}>Name:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.name || 'N/A'}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Employee ID:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.employeeId || 'N/A'}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Purpose:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.purpose}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Destination:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.destination}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Pickup Location:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.pickupLocation}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Date:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{formatDate(selectedRequest.date)}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Pickup Time:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.pickupTime}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Return Time:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.returnTime || 'Not specified'}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Passengers:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.passengers}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Notes:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.notes || 'No additional notes'}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Status:</TableCell>
-                                                <TableCell sx={{ borderBottom: 'none' }}>
-                                                    <StyledChip
-                                                        // Display "Not Approved" correctly for Cancelled/Expired
-                                                        label={selectedRequest.status === 'Cancelled' || selectedRequest.status === 'Expired' ? "Not Approved" : selectedRequest.status}
-                                                        status={selectedRequest.status}
-                                                    />
-                                                </TableCell>
-                                            </TableRow>
-                                            {selectedRequest.assignedDriver && (<TableRow>
-                                                    <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Assigned Driver:</TableCell>
-                                                    <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.assignedDriver.name}</TableCell>
-                                                </TableRow>
-                                            )}
-                                            {selectedRequest.assignedVehicle && (
-                                                <TableRow>
-                                                    <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Assigned Vehicle:</TableCell>
-                                                    <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.assignedVehicle.number}</TableCell>
-                                                </TableRow>
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </DialogContent>
-                            <DialogActions>
-                                <Button onClick={handleCloseDialog} color="primary">Close</Button>
-                            </DialogActions>
-                        </>
-                    )}
+                                {/* View Details Dialog */}
+                                <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="md">
+                                    {selectedRequest && (
+        <>
+            <DialogTitle>Request Details (ID: {selectedRequest.id})</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    Here are the details of the vehicle request:
+                </DialogContentText>
+                <TableContainer component={Paper} elevation={0} sx={{ mt: 2 }}>
+                    <Table size="small">
+                        <TableBody>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none', width: '30%' }}>Name:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.name || 'N/A'}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Employee ID:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.employeeId || 'N/A'}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Purpose:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.purpose}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Destination:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.destination}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Pickup Location:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.pickupLocation}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Date:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{formatDate(selectedRequest.date)}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Pickup Time:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.pickupTime}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Return Time:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.returnTime || 'Not specified'}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Passengers:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.passengers}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Notes:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>{selectedRequest.notes || 'No additional notes'}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Status:</TableCell>
+                                <TableCell sx={{ borderBottom: 'none' }}>
+                                    <StyledChip
+                                        label={selectedRequest.status === 'Cancelled' || selectedRequest.status === 'Expired' ? "Not Approved" : selectedRequest.status}
+                                        status={selectedRequest.status}
+                                    />
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setOpenDialog(false)} color="primary">Close</Button>
+            </DialogActions>
+        </>
+    )}
+</Dialog>
+
+                {/* Edit Assignment Dialog */}
+                <Dialog open={openAssignmentDialog} onClose={() => setOpenAssignmentDialog(false)} fullWidth maxWidth="sm">
+                    <DialogTitle>Edit Assignment</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Select a driver and vehicle for this request.
+                        </DialogContentText>
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="driver-select-label">Driver</InputLabel>
+                            <Select
+                                labelId="driver-select-label"
+                                id="driver-select"
+                                name="driver"
+                                value={selectedDriver}
+                                label="Driver"
+                                onChange={handleAssignmentChange}
+                            >
+                                {drivers.map((driver) => (
+                                    <MenuItem key={driver.id} value={driver.id}>
+                                        {driver.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="vehicle-select-label">Vehicle</InputLabel>
+                            <Select
+                                labelId="vehicle-select-label"
+                                id="vehicle-select"
+                                name="vehicle"
+                                value={selectedVehicle}
+                                label="Vehicle"
+                                onChange={handleAssignmentChange}
+                            >
+                                {vehicles.map((vehicle) => (
+                                    <MenuItem key={vehicle.id} value={vehicle.id}>
+                                        {vehicle.number} ({vehicle.type})
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenAssignmentDialog(false)} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleAssignmentSubmit} color="primary">
+                            Update Assignment
+                        </Button>
+                    </DialogActions>
                 </Dialog>
             </ContentContainer>
         </DashboardContainer>
