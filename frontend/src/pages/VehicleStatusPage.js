@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
     Table,
     TableBody,
@@ -14,14 +15,14 @@ import {
 import { styled } from '@mui/system';
 
 const StyledChip = styled(Chip)(({ status }) => ({
-    color: 'white', // Set text color to white
+    color: 'white',
     ...(status === 'Available' && { backgroundColor: '#4CAF50' }),
     ...(status === 'Busy' && { backgroundColor: '#FF9800' }),
     ...(status === 'In-Maintenance' && { backgroundColor: '#F44336' }),
 }));
 
 function VehicleStatusPage() {
-    // Mock data for vehicles.  Updated models.
+    // Mock data for vehicles. Updated models.
     const vehicles = [
         { id: 'V1001', model: 'Bolero', status: 'Available' },
         { id: 'V1002', model: 'Bolero', status: 'Busy' },
@@ -32,35 +33,61 @@ function VehicleStatusPage() {
     ];
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom>
-                Vehicle Status
-            </Typography>
-            <TableContainer component={Paper} elevation={3}>
-                <Table sx={{ minWidth: 650 }} aria-label="vehicle status table">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Vehicle ID</TableCell>
-                            <TableCell>Model</TableCell>
-                            <TableCell>Status</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {vehicles.map((vehicle) => (
-                            <TableRow key={vehicle.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                <TableCell component="th" scope="row">
-                                    {vehicle.id}
-                                </TableCell>
-                                <TableCell>{vehicle.model}</TableCell>
-                                <TableCell>
-                                    <StyledChip label={vehicle.status} status={vehicle.status} />
-                                </TableCell>
+        <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }} 
+        >
+            <Box sx={{ p: 3 }}>
+                {/* Updated Header Section */}
+                <Box sx={{ mb: 4 }}>
+                    <Typography 
+                        variant="h4" 
+                        sx={{ 
+                            fontWeight: 600,
+                            color: '#2c3e50',
+                            mb: 1
+                        }}
+                    >
+                        Vehicle Status
+                    </Typography>
+                    <Typography 
+                        variant="subtitle1" 
+                        sx={{ 
+                            color: '#7f8c8d',
+                            fontSize: '1.1rem'
+                        }}
+                    >
+                        View current status of all company vehicles
+                    </Typography>
+                </Box>
+
+                <TableContainer component={Paper} elevation={3}>
+                    <Table sx={{ minWidth: 650 }} aria-label="vehicle status table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Vehicle ID</TableCell>
+                                <TableCell>Model</TableCell>
+                                <TableCell>Status</TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
+                        </TableHead>
+                        <TableBody>
+                            {vehicles.map((vehicle) => (
+                                <TableRow key={vehicle.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                    <TableCell component="th" scope="row">
+                                        {vehicle.id}
+                                    </TableCell>
+                                    <TableCell>{vehicle.model}</TableCell>
+                                    <TableCell>
+                                        <StyledChip label={vehicle.status} status={vehicle.status} />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Box>
+        </motion.div>
     );
 }
 

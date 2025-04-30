@@ -3,7 +3,7 @@ import {
     Box, Typography, Chip, Paper, Button, Dialog, DialogTitle,
     DialogContent, DialogContentText, DialogActions, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Divider, IconButton,
-    Stack, Select, FormControl, InputLabel, MenuItem
+    Stack, Select, FormControl, InputLabel, MenuItem, Snackbar, Alert
 } from '@mui/material';
 import { styled, useTheme } from '@mui/system';
 import { motion } from 'framer-motion';
@@ -105,6 +105,9 @@ function VehicleManagerDashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(true); // Keep sidebar state
     const [selectedRequestId, setSelectedRequestId] = useState(null); // Keep for row highlighting if needed
     const [selectedDriver, setSelectedDriver] = useState('');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const [selectedVehicle, setSelectedVehicle] = useState('');
     const [driverDetails, setDriverDetails] = useState({ name: '', phone: '' });
     const [vehicleDetails, setVehicleDetails] = useState({ type: '', number: '' });
@@ -170,6 +173,25 @@ useEffect(() => {
   setRequests(pending);
   setHeldRequests(held);
   
+     // Check for old pending requests
+     const oldPendingRequests = pending.filter(request => {
+      const requestDate = dayjs(request.date);
+      const daysSinceRequest = dayjs().diff(requestDate, 'minute');
+      return daysSinceRequest > 30;
+    });
+
+    if (oldPendingRequests.length > 0) {
+      let message = `${oldPendingRequests.length} requests have been pending for more than 30 minutes.`;
+      if (oldPendingRequests.length === 1) {
+          message = `1 request has been pending for more than 30 minutes.`;
+      }
+      setSnackbarMessage(message);
+      setSnackbarSeverity('warning');
+      setSnackbarOpen(true);
+      console.log(message);
+    }
+
+
   console.log("States should be updated now");
 }, []);
     // --- UPDATED Handlers to remove pastRequests logic ---
@@ -178,6 +200,10 @@ useEffect(() => {
         if (requestToApprove) {
             setSelectedRequest(requestToApprove);
             setAssignVehicleDialogOpen(true);
+
+            setSnackbarMessage('Request Approved');
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
         }
     };
 
@@ -260,6 +286,11 @@ useEffect(() => {
         setRequests(updatedRequests.filter(req => req.status === 'Pending'));
         setHeldRequests(updatedRequests.filter(req => req.status === 'Hold'));
          // setPastRequests(...) // *** REMOVED ***
+
+         setSnackbarMessage('Request Held');
+         setSnackbarSeverity('warning');
+         setSnackbarOpen(true);
+
     };
 
     const handleViewDetails = (request) => {
@@ -275,7 +306,16 @@ useEffect(() => {
 
 // ** END OF PART 1 **
 return (
+
   <DashboardContainer>
+
+<Snackbar
+      open={snackbarOpen}
+      onClose={() => setSnackbarOpen(false)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+      <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>{snackbarMessage}</Alert>
+    </Snackbar>
       <HamburgerButton
           color="inherit"
           aria-label="open drawer"

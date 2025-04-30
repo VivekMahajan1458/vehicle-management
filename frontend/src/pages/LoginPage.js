@@ -27,36 +27,56 @@ function LoginPage() {
         setRole(event.target.value);
     };
 
-    // --- CORRECTED handleSubmit ---
+    // --- UPDATED handleSubmit ---
     const handleSubmit = (event) => {
         event.preventDefault();
         let isValid = true;
 
-        // Basic Validation (Keep as is)
+        // Reset errors
+        setEmailError('');
+        setPasswordError('');
+
+        // Basic Validation
         if (!email) { setEmailError('Email is required'); isValid = false; }
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailError('Invalid email format'); isValid = false; }
         if (!password) { setPasswordError('Password is required'); isValid = false; }
         else if (password.length < 6) { setPasswordError('Password must be at least 6 characters long'); isValid = false; }
-        if (!role) { alert("Please select a role."); isValid = false; } // Added role validation
+        if (!role) {
+            // Consider a better UI element for this error if needed
+            alert("Please select a role.");
+            isValid = false;
+        }
 
         if (isValid) {
-            // --- ADD localStorage logic ---
-            localStorage.setItem('userRole', role); // Store selected role
-            localStorage.setItem('isLoggedIn', 'true'); // Set logged-in flag
+            console.log(`Login attempt: Role - ${role}, Email - ${email}`); // Log attempt
 
-            // Navigation Logic (Keep as is, now happens *after* setting localStorage)
+            // Set localStorage items *before* navigation for any valid attempt
+            localStorage.setItem('userRole', role);
+            localStorage.setItem('isLoggedIn', 'true');
+
+            // Navigation Logic based on role
             if (role === 'employee') {
+                console.log('Navigating to employee dashboard...');
                 navigate('/employee/dashboard');
             } else if (role === 'manager') {
+                console.log('Navigating to vehicle manager dashboard...');
                 navigate('/vehicle-manager');
             } else if (role === 'admin') {
-                alert("Admin Feature is coming Soon");
-                // Optionally clear localStorage if admin login fails for now
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('isLoggedIn');
+                // --- CHANGE HERE: Navigate to admin route ---
+                console.log('Navigating to admin dashboard...');
+                navigate('/admin'); // Navigate to the admin page route
+                // --- REMOVED: alert("Admin Feature is coming Soon"); ---
+                // --- REMOVED: localStorage.removeItem lines (keep user logged in) ---
+            } else {
+                 // Fallback for unexpected roles (shouldn't happen with select)
+                 console.error("Unexpected role selected:", role);
+                 alert("An unexpected error occurred. Please try again.");
+                 localStorage.removeItem('userRole');
+                 localStorage.removeItem('isLoggedIn');
             }
         }
     };
+    // -----------------------------
 
     return (
         <motion.div
@@ -76,12 +96,12 @@ function LoginPage() {
         >
              <Box
                  sx={{
-                     backgroundColor: 'rgba(255, 255, 255, 0.1)', // Changed opacity
+                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                      backdropFilter: 'blur(2px)',
                      padding: '10px',
                      width: '100%',
                      display: 'flex',
-                     justifyContent: 'center', // Keep this to center the logo
+                     justifyContent: 'center',
                      alignItems: 'center',
                      boxSizing: 'border-box'
                      }}
@@ -183,14 +203,16 @@ function LoginPage() {
                             />
                             <TextField
                                 select
+                                required // Make role required
                                 fullWidth
-                                label="Select your role *"
+                                label="Select your role "
                                 value={role}
                                 onChange={handleRoleChange}
                                 margin="normal"
                                 variant="outlined"
                                 id="role"
                                 name="role"
+                                // Add error/helperText state for role if needed
                                 sx={{
                                     mb: 2,
                                     '& .MuiOutlinedInput-root': {
@@ -199,6 +221,7 @@ function LoginPage() {
                                     },
                                 }}
                             >
+                                {/* Added empty value option for better validation */}
                                 <MenuItem value="employee">Employee</MenuItem>
                                 <MenuItem value="manager">Vehicle Manager</MenuItem>
                                 <MenuItem value="admin">Admin</MenuItem>
@@ -236,7 +259,7 @@ function LoginPage() {
             {/* Bottom Translucent Bar */}
              <Box
                  sx={{
-                     backgroundColor: 'rgba(255, 255, 255, 0.1)', // Changed opacity
+                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                      backdropFilter: 'blur(2px)',
                      padding: '10px',
                      width: '100%',
@@ -245,7 +268,8 @@ function LoginPage() {
                      }}
              >
                  <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 500 }}>
-                     &copy; 2025 Megha Engineering & Infrastructures Ltd. Vehicle Management System. All rights reserved.
+                     {/* Corrected year */}
+                     &copy; {new Date().getFullYear()} Megha Engineering & Infrastructures Ltd. Vehicle Management System. All rights reserved.
                  </Typography>
             </Box>
         </motion.div>
